@@ -76,6 +76,9 @@ void Game::HandleInput() {
                 if (state == GameState::ShipExploding) {
                     Reset();
                 }
+                else if (event.key.key == SDLK_SPACE && !event.key.repeat) {
+                    ship->FireLaser();
+                }
                 break;
         }
 
@@ -94,9 +97,6 @@ void Game::HandleInput() {
         }
         else {
             shipDirection = 0;
-        }
-        if (keys[SDL_SCANCODE_SPACE]) {
-            ship->FireLaser();
         }
     }
 }
