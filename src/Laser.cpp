@@ -10,9 +10,12 @@ Laser::Laser()
 }
 
 void Laser::Draw(SDL_Renderer* renderer) {
-    SDL_SetRenderDrawColor(renderer, 47, 230, 23, 255);
-    SDL_FRect shipRect = { position.x, position.y, Constants::Laser::Width, Constants::Laser::Height };
-    SDL_RenderFillRect(renderer, &shipRect);
+    if (active) {
+        SDL_SetRenderDrawColor(renderer, 47, 230, 23, 255);
+        SDL_FRect shipRect = { position.x, position.y, Constants::Laser::Width, Constants::Laser::Height };
+        SDL_RenderFillRect(renderer, &shipRect);
+    }
+    
 }
 
 void Laser::Update(float deltaTime, int direction) {

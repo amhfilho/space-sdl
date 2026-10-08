@@ -38,3 +38,19 @@ void Obstacle::Draw(SDL_Renderer *renderer) {
         block.Draw(renderer);
     }
 }
+
+bool Obstacle::CheckCollision(const Position &laserPosition) {
+    for (auto it = blocks.begin(); it != blocks.end(); ) {
+        if (laserPosition.x < it->GetPosition().x + Constants::Block::Width &&
+            laserPosition.x + Constants::Laser::Width > it->GetPosition().x &&
+            laserPosition.y < it->GetPosition().y + Constants::Block::Height &&
+            laserPosition.y + Constants::Laser::Height > it->GetPosition().y) {
+            // Collision detected: remove the block.
+            it = blocks.erase(it);
+            return true;
+        } else {
+            ++it;
+        }
+    }
+    return false;
+}

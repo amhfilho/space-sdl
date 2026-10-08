@@ -299,17 +299,23 @@ void Game::CheckLaserCollision() {
         }
     }
 
-    for (auto& alienLaser : alienLasers) {
-        if (!alienLaser.active) {
+    for (auto it = alienLasers.begin(); it != alienLasers.end(); ++it) {
+        if (!it->active) {
             continue;
         }
-        if (ship->gotHit(alienLaser.position)) {
+        for (auto& obstacle : obstacles) {
+            if (obstacle.CheckCollision(it->position)) {
+                it->active = false;
+                break;
+            }
+        }
+        if (ship->gotHit(it->position)) {
             float explosionX = ship->position.x + Constants::Ship::BaseWidth / 2.0f - Constants::Ship::BaseWidth / 2.0f;
             float explosionY = ship->position.y - Constants::Ship::ShipHeight;
             Position explosionPosition = { explosionX, explosionY };
             explosions.emplace_back(explosionPosition, renderer, true); // persistent explosion
             state = GameState::ShipExploding;
-            alienLaser.active = false;
+            it->active = false;
             break;
         }
     }
