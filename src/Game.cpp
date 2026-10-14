@@ -284,6 +284,15 @@ void Game::CheckLaserCollision() {
         if (!shipLaser.active) {
             continue;
         }
+        for (auto& obstacle : obstacles) {
+            if (obstacle.CheckCollision(shipLaser, -1)) {
+                shipLaser.active = false;
+                break;
+            }
+        }
+        if (!shipLaser.active) {
+            continue;
+        }
         for (auto it = aliens.begin(); it != aliens.end(); ++it) {
             if (shipLaser.position.x < it->position.x + it->GetWidth() &&
                 shipLaser.position.x + Constants::Laser::Width > it->position.x &&
@@ -304,10 +313,13 @@ void Game::CheckLaserCollision() {
             continue;
         }
         for (auto& obstacle : obstacles) {
-            if (obstacle.CheckCollision(it->position)) {
+            if (obstacle.CheckCollision(*it, 1)) {
                 it->active = false;
                 break;
             }
+        }
+        if (!it->active) {
+            continue;
         }
         if (ship->gotHit(it->position)) {
             float explosionX = ship->position.x + Constants::Ship::BaseWidth / 2.0f - Constants::Ship::BaseWidth / 2.0f;

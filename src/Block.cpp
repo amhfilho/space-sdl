@@ -4,6 +4,7 @@
 
 Block::Block(Position position) {
     this->position = position;
+    this->draw = true;
 }
 
 void Block::Draw(SDL_Renderer* renderer) {

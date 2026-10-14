@@ -11,6 +11,7 @@ public:
     bool IsOffScreen() const;
 
     Position position;
+    float previousY = 0.0f;
     bool active = true;
 private:
     float speed;

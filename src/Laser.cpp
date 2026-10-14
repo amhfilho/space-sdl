@@ -19,6 +19,7 @@ void Laser::Draw(SDL_Renderer* renderer) {
 }
 
 void Laser::Update(float deltaTime, int direction) {
+    previousY = position.y;
     position.y += Constants::Laser::Speed * deltaTime * direction;
 }
 
