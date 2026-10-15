@@ -7,6 +7,7 @@ public:
     Block(Position position);
     void Draw(SDL_Renderer* renderer);
     Position GetPosition() const;
+    SDL_FRect GetRect() const;
     bool draw;
 private:
     Position position;

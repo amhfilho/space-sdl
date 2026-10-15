@@ -13,7 +13,7 @@ public:
     void FireLaser();
     void UpdateLaser(float deltaTime);
     std::vector<Laser>& GetLasers();
-    bool gotHit(Position& alienLaserPosition);
+    bool gotHit(const SDL_FRect& laserRect) const;
     Position position;
 
 private:

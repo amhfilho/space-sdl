@@ -16,3 +16,6 @@ void Block::Draw(SDL_Renderer* renderer) {
 Position Block::GetPosition() const {
     return position;
 }
+SDL_FRect Block::GetRect() const {
+    return { position.x, position.y, Constants::Block::Width, Constants::Block::Height };
+}

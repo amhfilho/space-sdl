@@ -44,20 +44,14 @@ void Obstacle::Draw(SDL_Renderer *renderer) {
 }
 
 bool Obstacle::CheckCollision(const Laser &laser, int direction) {
-    const float laserStartX = laser.position.x;
-    const float laserEndX = laserStartX + Constants::Laser::Width;
-    // Sweep the whole path travelled this frame so fast lasers can't tunnel through blocks.
-    const float sweptStartY = std::min(laser.previousY, laser.position.y);
-    const float sweptEndY = std::max(laser.previousY, laser.position.y) + Constants::Laser::Height;
+    const SDL_FRect sweptRect = laser.GetSweptRect();
 
     auto hit = obstacleBlocks.end();
     for (auto it = obstacleBlocks.begin(); it != obstacleBlocks.end(); ++it) {
         const Position blockPosition = it->second.GetPosition();
-        const float blockEndX = blockPosition.x + Constants::Block::Width;
-        const float blockEndY = blockPosition.y + Constants::Block::Height;
+        const SDL_FRect blockRect = it->second.GetRect();
 
-        if (laserStartX < blockEndX && laserEndX > blockPosition.x &&
-            sweptStartY < blockEndY && sweptEndY > blockPosition.y) {
+        if (SDL_HasRectIntersectionFloat(&sweptRect, &blockRect)) {
             if (hit == obstacleBlocks.end()) {
                 hit = it;
                 continue;

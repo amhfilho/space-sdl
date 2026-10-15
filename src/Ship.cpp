@@ -66,12 +66,7 @@ std::vector<Laser>& Ship::GetLasers() {
     return lasers;
 }
 
-bool Ship::gotHit(Position &alienLaserPosition) {
-    if (alienLaserPosition.x < position.x + Constants::Ship::BaseWidth &&
-        alienLaserPosition.x + Constants::Laser::Width > position.x &&
-        alienLaserPosition.y < position.y + Constants::Ship::BaseHeight &&
-        alienLaserPosition.y + Constants::Laser::Height > position.y) {
-        return true;
-    }
-    return false;
+bool Ship::gotHit(const SDL_FRect& laserRect) const {
+    const SDL_FRect shipRect = { position.x, position.y, Constants::Ship::BaseWidth, Constants::Ship::BaseHeight };
+    return SDL_HasRectIntersectionFloat(&shipRect, &laserRect);
 }

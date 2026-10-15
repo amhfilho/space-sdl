@@ -20,6 +20,7 @@ public:
     Position position;
     float GetWidth() const { return textureWidth; }
     float GetHeight() const { return textureHeight; }
+    SDL_FRect GetRect() const { return { position.x, position.y, textureWidth, textureHeight }; }
 
     // Releases all cached textures. Must be called before the renderer
     // that owns them is destroyed (e.g. in Game's destructor).

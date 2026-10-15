@@ -294,10 +294,9 @@ void Game::CheckLaserCollision() {
             continue;
         }
         for (auto it = aliens.begin(); it != aliens.end(); ++it) {
-            if (shipLaser.position.x < it->position.x + it->GetWidth() &&
-                shipLaser.position.x + Constants::Laser::Width > it->position.x &&
-                shipLaser.position.y < it->position.y + it->GetHeight() &&
-                shipLaser.position.y + Constants::Laser::Height > it->position.y) {
+            const SDL_FRect laserRect = shipLaser.GetRect();
+            const SDL_FRect alienRect = it->GetRect();
+            if (SDL_HasRectIntersectionFloat(&laserRect, &alienRect)) {
                 // Collision detected: remove the alien and consume the laser.
                 explosions.emplace_back(it->position, renderer, false);
 
@@ -321,7 +320,7 @@ void Game::CheckLaserCollision() {
         if (!it->active) {
             continue;
         }
-        if (ship->gotHit(it->position)) {
+        if (ship->gotHit(it->GetRect())) {
             float explosionX = ship->position.x + Constants::Ship::BaseWidth / 2.0f - Constants::Ship::BaseWidth / 2.0f;
             float explosionY = ship->position.y - Constants::Ship::ShipHeight;
             Position explosionPosition = { explosionX, explosionY };
