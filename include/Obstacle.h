@@ -13,7 +13,7 @@ public:
     void Draw(SDL_Renderer* renderer);
     bool CheckCollision(const Laser &laser, int direction);
     Position position;
-    std::unordered_map<GridPosition, Block> obstacleBlocks;
+    std::unordered_map<GridPosition, Block> blocks;
     static std::vector<std::vector<int>> grid;
 private:
 };

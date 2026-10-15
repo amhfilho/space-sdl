@@ -1,6 +1,5 @@
 #include "Obstacle.h"
 #include "Constants.h"
-#include <algorithm>
 
 std::vector<std::vector<int>> Obstacle::grid = {
         {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
@@ -29,14 +28,14 @@ Obstacle::Obstacle(Position position) {
                     position.y + static_cast<float>(row) * Constants::Block::Height
                 };
                 GridPosition gridPosition = {row, col};
-                obstacleBlocks.insert_or_assign(gridPosition, Block(blockPosition));
+                blocks.insert_or_assign(gridPosition, Block(blockPosition));
             }
         }
     }
 }
 
 void Obstacle::Draw(SDL_Renderer *renderer) {
-    for (auto &block : obstacleBlocks) {
+    for (auto &block : blocks) {
         if (block.second.draw == true) {
             block.second.Draw(renderer);
         }
@@ -46,13 +45,13 @@ void Obstacle::Draw(SDL_Renderer *renderer) {
 bool Obstacle::CheckCollision(const Laser &laser, int direction) {
     const SDL_FRect sweptRect = laser.GetSweptRect();
 
-    auto hit = obstacleBlocks.end();
-    for (auto it = obstacleBlocks.begin(); it != obstacleBlocks.end(); ++it) {
+    auto hit = blocks.end();
+    for (auto it = blocks.begin(); it != blocks.end(); ++it) {
         const Position blockPosition = it->second.GetPosition();
         const SDL_FRect blockRect = it->second.GetRect();
 
         if (SDL_HasRectIntersectionFloat(&sweptRect, &blockRect)) {
-            if (hit == obstacleBlocks.end()) {
+            if (hit == blocks.end()) {
                 hit = it;
                 continue;
             }
@@ -66,14 +65,14 @@ bool Obstacle::CheckCollision(const Laser &laser, int direction) {
         }
     }
 
-    if (hit == obstacleBlocks.end()) {
+    if (hit == blocks.end()) {
         return false;
     }
     // Damage area: the hit block, its left/right neighbours, and the same three blocks in the row above.
     const GridPosition center = hit->first;
     for (int row = center.x - 1; row <= center.x; ++row) {
         for (int col = center.y - 1; col <= center.y + 1; ++col) {
-            obstacleBlocks.erase(GridPosition{row, col});
+            blocks.erase(GridPosition{row, col});
         }
     }
     return true;
