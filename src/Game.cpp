@@ -12,7 +12,7 @@ Game::Game()
     , shipDirection(0)
     , alienDirection(1)
     , lastLaserShotTime(0)
-    , alienLaserShotInterval(800)
+    , alienLaserShotInterval(500)
     , lastMisteryShipDeployTime(0)
     , misteryShipDeployInterval(Random::Int(10000, 20000)) // Deploy every 10 to 20 seconds
     , gameOver(false)
@@ -207,7 +207,7 @@ void Game::CreateAllObstacles() {
     for (int i = 0; i < 4; ++i) {
         float offsetX = (i + 1) * gap + i * obstacleWidth;
 
-        Position position = { offsetX, Constants::Space::Height - Constants::Ship::ShipHeight - obstacleHeight };
+        Position position = { offsetX, Constants::Space::Height - Constants::Ship::ShipHeight - obstacleHeight*3 };
         obstacles.emplace_back(position);
     }
 }

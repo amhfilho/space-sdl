@@ -1,6 +1,7 @@
 #include "MisteryShip.h"
 #include "Random.h"
 #include "Constants.h"
+#include "AssetLoader.h"
 #include <SDL3_image/SDL_image.h>
 
 MisteryShip::MisteryShip(SDL_Renderer* renderer)
@@ -10,7 +11,8 @@ MisteryShip::MisteryShip(SDL_Renderer* renderer)
       speed(100.0f),
       alive(false) {
 
-    texture.reset(IMG_LoadTexture(renderer, "Graphics/mystery.png"));
+    std::string path = AssetLoader::GetAssetPath("Graphics/mystery.png");
+    texture.reset(IMG_LoadTexture(renderer, path.c_str()));
     if (texture == nullptr) {
         SDL_Log("Error loading texture: %s", SDL_GetError());
         return;

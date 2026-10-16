@@ -14,7 +14,7 @@ Ship::Ship()
 
 void Ship::Draw(SDL_Renderer* renderer, float offsetY) {
     SDL_SetRenderDrawColor(renderer, 47, 230, 23, 255);
-    float positionY = position.y + offsetY;
+    float positionY = Constants::Ship::PositionY;
     shipRect0 = { position.x, positionY, Constants::Ship::BaseWidth, Constants::Ship::BaseHeight };
     shipRect1 = { position.x+2, positionY - Constants::Ship::PartHeight, 46, 5 };
     shipRect2 = { position.x+2 + 23-5, positionY - Constants::Ship::PartHeight * 2, 10, 5 };

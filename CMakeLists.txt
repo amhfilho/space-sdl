@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew" "/usr/local")
 
+# Avoid picking up a separately-installed SDL3.framework (e.g. in
+# ~/Library/Frameworks) while SDL3_image resolves to the Homebrew dylib.
+# Loading both SDL3 binaries into the same process causes duplicate
+# Objective-C class registrations and crashes at runtime.
+set(CMAKE_FIND_FRAMEWORK NEVER)
+
 find_package(SDL3 REQUIRED CONFIG)
 find_package(SDL3_image REQUIRED CONFIG)
 
@@ -35,6 +41,8 @@ add_executable(${PROJECT_NAME}
         src/MisteryShip.cpp
         include/Explosion.h
         src/Explosion.cpp
+        include/AssetLoader.h
+        src/AssetLoader.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

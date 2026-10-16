@@ -1,10 +1,11 @@
 #include <SDL3_image/SDL_image.h>
 #include "Explosion.h"
+#include "AssetLoader.h"
 
 Explosion::Texture Explosion::LoadTexture(SDL_Renderer* renderer) {
-    const char* path = "Graphics/explosion.png";
+    std::string path = AssetLoader::GetAssetPath("Graphics/explosion.png");
 
-    Texture loaded(IMG_LoadTexture(renderer, path));
+    Texture loaded(IMG_LoadTexture(renderer, path.c_str()));
     if (loaded == nullptr) {
         SDL_Log("Error loading texture: %s", SDL_GetError());
     }

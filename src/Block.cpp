@@ -8,7 +8,7 @@ Block::Block(Position position) {
 }
 
 void Block::Draw(SDL_Renderer* renderer) {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 47, 230, 23, 255);
     SDL_FRect blockRect = { position.x, position.y, Constants::Block::Width, Constants::Block::Height };
     SDL_RenderFillRect(renderer, &blockRect);
 }

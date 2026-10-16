@@ -8,10 +8,11 @@ namespace   Constants {
     }
 
 namespace Space {
-        inline constexpr float Height = Window::Height - 100.0f;
+        inline constexpr float Height = Window::Height - 50.0f;
     }
 
     namespace Ship {
+        inline constexpr float PositionY = 680.0f;
         inline constexpr float BaseWidth = 50.0f;
         inline constexpr float BaseHeight = 10.0f;
         // Bottom middle of the window (position is the top-left of the base)
@@ -35,7 +36,7 @@ namespace Space {
     }
 
     namespace Obstacle {
-        inline constexpr float Bottom = Window::Height - (19 * Block::Height) ;
+        inline constexpr float Bottom = Space::Height - (50 * Block::Height) ;
     }
 
     namespace Alien {

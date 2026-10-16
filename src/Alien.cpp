@@ -1,5 +1,6 @@
 #include <SDL3_image/SDL_image.h>
 #include "Alien.h"
+#include "AssetLoader.h"
 
 #include <unordered_map>
 
@@ -11,15 +12,16 @@ SDL_Texture* Alien::GetOrLoadTexture(SDL_Renderer* renderer, int type) {
         return it->second.get();
     }
 
-    const char* path;
+    const char* relativePath;
     switch (type) {
-        case 1: path = "Graphics/alien_1.png"; break;
-        case 2: path = "Graphics/alien_2.png"; break;
-        case 3: path = "Graphics/alien_3.png"; break;
-        default: path = "Graphics/alien_1.png"; break;
+        case 1: relativePath = "Graphics/alien_1.png"; break;
+        case 2: relativePath = "Graphics/alien_2.png"; break;
+        case 3: relativePath = "Graphics/alien_3.png"; break;
+        default: relativePath = "Graphics/alien_1.png"; break;
     }
 
-    std::unique_ptr<SDL_Texture, TextureDeleter> loaded(IMG_LoadTexture(renderer, path));
+    std::string path = AssetLoader::GetAssetPath(relativePath);
+    std::unique_ptr<SDL_Texture, TextureDeleter> loaded(IMG_LoadTexture(renderer, path.c_str()));
     if (loaded == nullptr) {
         SDL_Log("Error loading texture: %s", SDL_GetError());
         return nullptr;
