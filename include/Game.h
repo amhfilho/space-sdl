@@ -11,11 +11,8 @@
 
 class Game {
 public:
-    // ShipExploding freezes gameplay while the ship's explosion is shown,
-    // resuming (via Reset()) as soon as the player presses any key.
     enum class GameState {
-        Playing,
-        ShipExploding
+        Playing, ShipExploding, DelayAfterExploding, GameOver
     };
 
     Game();
@@ -26,6 +23,9 @@ public:
     bool InitializeWindow();
 
     void HandleInput();
+
+
+
     void Update();
     void Draw();
 private:
@@ -37,6 +37,7 @@ private:
     int shipDirection;
     int alienDirection;
     Uint64 lastLaserShotTime;
+    Uint64 explosionTime;
     int alienLaserShotInterval;
     Uint64 lastMisteryShipDeployTime;
     int misteryShipDeployInterval;
@@ -60,4 +61,5 @@ private:
     void DeleteInactiveAlienLasers();
     void Reset();
     void CheckLaserCollision();
+    void WriteGameOver();
 };

@@ -3,27 +3,63 @@
 //
 
 #include <algorithm>
+#include <SDL3_image/SDL_image.h>
 #include "Ship.h"
 #include "Constants.h"
+#include "AssetLoader.h"
 
-Ship::Ship()
-    : position({Constants::Ship::BaseStartX, Constants::Ship::BaseStartY}),
-      speed(Constants::Ship::Speed) {
+SDL_Texture* Ship::texture = nullptr;
 
+Ship::Ship(SDL_Renderer* renderer)
+    : speed(Constants::Ship::Speed),
+      textureWidth(0.0f),
+      textureHeight(0.0f) {
+
+    if (texture == nullptr) {
+        std::string path = AssetLoader::GetAssetPath("Graphics/ship.png");
+        texture = IMG_LoadTexture(renderer, path.c_str());
+        if (texture == nullptr) {
+            SDL_Log("Error loading texture: %s", SDL_GetError());
+        }
+    }
+
+    if (texture != nullptr && !SDL_GetTextureSize(texture, &textureWidth, &textureHeight)) {
+        SDL_Log("Error getting texture size: %s", SDL_GetError());
+    }
+
+    SetInitialPosition();
+
+    SDL_Log("texture width: %f", textureWidth);
+    SDL_Log("texture height: %f", textureHeight);
 }
 
-void Ship::Draw(SDL_Renderer* renderer, float offsetY) {
-    SDL_SetRenderDrawColor(renderer, 47, 230, 23, 255);
-    float positionY = Constants::Ship::PositionY;
-    shipRect0 = { position.x, positionY, Constants::Ship::BaseWidth, Constants::Ship::BaseHeight };
-    shipRect1 = { position.x+2, positionY - Constants::Ship::PartHeight, 46, 5 };
-    shipRect2 = { position.x+2 + 23-5, positionY - Constants::Ship::PartHeight * 2, 10, 5 };
-    shipRect3 = { position.x+2 + 23-5+3, positionY - Constants::Ship::PartHeight * 3, 4, 5 };
-    SDL_RenderFillRect(renderer, &shipRect0);
-    SDL_RenderFillRect(renderer, &shipRect1);
-    SDL_RenderFillRect(renderer, &shipRect2);
-    SDL_RenderFillRect(renderer, &shipRect3);
+void Ship::SetInitialPosition() {
+    position = {Constants::Window::Width/2.0f - textureWidth/2, 655.0f};
+}
 
+SDL_Texture* Ship::GetTexture() const {
+    return texture;
+}
+
+float Ship::GetTextureWidth() const {
+    return textureWidth;
+}
+float Ship::GetTextureHeight() const {
+    return textureHeight;
+}
+
+void Ship::ClearTexture() {
+    if (texture != nullptr) {
+        SDL_DestroyTexture(texture);
+        texture = nullptr;
+    }
+}
+
+void Ship::Draw(SDL_Renderer* renderer) {
+    if (texture != nullptr) {
+        SDL_FRect shipRect = GetRect();
+        SDL_RenderTexture(renderer, texture, nullptr, &shipRect);
+    }
     for (auto& laser : lasers) {
         laser.Draw(renderer);
     }
@@ -67,6 +103,10 @@ std::vector<Laser>& Ship::GetLasers() {
 }
 
 bool Ship::gotHit(const SDL_FRect& laserRect) const {
-    const SDL_FRect shipRect = { position.x, position.y, Constants::Ship::BaseWidth, Constants::Ship::BaseHeight };
+    const SDL_FRect shipRect = GetRect();
     return SDL_HasRectIntersectionFloat(&shipRect, &laserRect);
+}
+
+SDL_FRect Ship::GetRect() const {
+    return {position.x, position.y, textureWidth, textureHeight};
 }

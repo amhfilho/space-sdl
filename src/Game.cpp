@@ -7,11 +7,11 @@
 
 Game::Game()
     : running(true)
-    , window(nullptr)
     , renderer(nullptr)
     , shipDirection(0)
     , alienDirection(1)
     , lastLaserShotTime(0)
+    , explosionTime(0)
     , alienLaserShotInterval(500)
     , lastMisteryShipDeployTime(0)
     , misteryShipDeployInterval(Random::Int(10000, 20000)) // Deploy every 10 to 20 seconds
@@ -53,7 +53,7 @@ bool Game::InitializeWindow() {
         return false;
     }
 
-    ship.emplace();
+    ship.emplace(renderer);
     CreateAllAliens();
     misteryShip.emplace(renderer);
 
@@ -73,7 +73,7 @@ void Game::HandleInput() {
                         running = false;
                         break;
                 }
-                if (state == GameState::ShipExploding) {
+                if (state == GameState::GameOver) {
                     Reset();
                 }
                 else if (event.key.key == SDLK_SPACE && !event.key.repeat) {
@@ -82,8 +82,7 @@ void Game::HandleInput() {
                 break;
         }
 
-        if (state == GameState::ShipExploding) {
-            // Gameplay is frozen until the player presses a key (handled above).
+        if (state == GameState::GameOver) {
             shipDirection = 0;
             continue;
         }
@@ -114,8 +113,37 @@ void Game::Update() {
                        [](const Explosion& explosion) { return !explosion.IsActive(); }),
         explosions.end());
 
+
     if (state == GameState::ShipExploding) {
-        // Gameplay is frozen; wait for the player to press a key (see HandleInput).
+        if (explosions.empty()) {
+            // The persistent explosion has run its course: lose a life and
+            // start the 1-second delay before a new ship appears.
+            lifes--;
+            if (lifes == 0) {
+                state = GameState::GameOver;
+            } else {
+                explosionTime = currentTicks;
+                state = GameState::DelayAfterExploding;
+            }
+        } else {
+            // Gameplay is frozen while the ship's explosion plays out.
+            return;
+        }
+    }
+    Uint64 delayAfterExploding = 1000;
+    if (state == GameState::DelayAfterExploding) {
+        if (currentTicks - explosionTime > delayAfterExploding) {
+            // Spawn a new ship and resume play.
+            ship->SetInitialPosition();
+            ship->GetLasers().clear();
+            state = GameState::Playing;
+        }
+        else {
+            return;
+        }
+    }
+
+    if (state == GameState::GameOver) {
         return;
     }
 
@@ -155,13 +183,20 @@ void Game::Draw() {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    if (state == GameState::Playing) {
-        ship->Draw(renderer, 0.0f);
+    if (state == GameState::GameOver) {
+        WriteGameOver();
     }
 
-    for (int i = lifes; i > 0; i--) {
-        
-        ship->Draw(renderer, 0.0f);
+    if (state == GameState::Playing) {
+        ship->Draw(renderer);
+    }
+
+    float init = 10.0f;
+    for (int i = 0; i < lifes; i++) {
+        float offsetX = ship->GetTextureWidth()*i + (10.0f*i) + init;
+        SDL_Texture *texture = ship->GetTexture();
+        SDL_FRect shipRect = { offsetX, 775.0f, ship->GetTextureWidth(), ship->GetTextureHeight() };
+        SDL_RenderTexture(renderer, texture, nullptr, &shipRect);
     }
     for (auto& alien : aliens) {
         alien.Draw(renderer);
@@ -181,9 +216,9 @@ void Game::Draw() {
 
     SDL_RenderLine(renderer,
         0 ,
-        Constants::Window::Height - (Constants::Window::Height - Constants::Space::Height),
+        Constants::Space::Height,
         Constants::Window::Width,
-        Constants::Window::Height - (Constants::Window::Height - Constants::Space::Height));
+        Constants::Space::Height);
 
     SDL_RenderPresent(renderer);
 }
@@ -191,6 +226,7 @@ void Game::Draw() {
 Game::~Game() {
     aliens.clear();
     Alien::ClearTextureCache();
+    Ship::ClearTexture();
     misteryShip.reset();
     explosions.clear();
     SDL_DestroyRenderer(renderer);
@@ -201,13 +237,12 @@ Game::~Game() {
 void Game::CreateAllObstacles() {
     obstacles.clear();
     int obstacleWidth = Obstacle::grid[0].size() * Constants::Block::Width;
-    int obstacleHeight = Obstacle::grid.size() * Constants::Block::Height;
     float gap = (Constants::Window::Width - (4 * obstacleWidth)) / 5; // Calculate the gap between obstacles
 
     for (int i = 0; i < 4; ++i) {
         float offsetX = (i + 1) * gap + i * obstacleWidth;
 
-        Position position = { offsetX, Constants::Space::Height - Constants::Ship::ShipHeight - obstacleHeight*3 };
+        Position position = { offsetX, Constants::Obstacle::Y };
         obstacles.emplace_back(position);
     }
 }
@@ -256,8 +291,9 @@ void Game::MoveAliensDown(int distance) {
 void Game::Reset() {
     // Return the ship to its starting position, clear transient state, and
     // resume gameplay after the ship's explosion has been acknowledged.
-    ship->position = { Constants::Ship::BaseStartX, Constants::Ship::BaseStartY };
+    ship->SetInitialPosition();
     ship->GetLasers().clear();
+    shipDirection = 0;
     alienLasers.clear();
     explosions.clear();
     state = GameState::Playing;
@@ -321,13 +357,24 @@ void Game::CheckLaserCollision() {
             continue;
         }
         if (ship->gotHit(it->GetRect())) {
-            float explosionX = ship->position.x + Constants::Ship::BaseWidth / 2.0f - Constants::Ship::BaseWidth / 2.0f;
-            float explosionY = ship->position.y - Constants::Ship::ShipHeight;
+            float explosionX = ship->GetRect().x;
+            float explosionY = ship->GetRect().y;
             Position explosionPosition = { explosionX, explosionY };
             explosions.emplace_back(explosionPosition, renderer, true); // persistent explosion
             state = GameState::ShipExploding;
             it->active = false;
+            if (lifes < 3) {
+                state = GameState::GameOver;
+            }
             break;
         }
     }
+}
+
+void Game::WriteGameOver() {
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    SDL_SetRenderScale(renderer, 2.0f, 2.0f);
+    SDL_RenderDebugText(renderer, 170, 80, "GAME OVER");
+    SDL_SetRenderScale(renderer, 1.0f, 1.0f);
 }

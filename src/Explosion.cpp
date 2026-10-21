@@ -28,11 +28,15 @@ Explosion::Explosion(Position position, SDL_Renderer* renderer, bool persistent)
 }
 
 void Explosion::Update(float deltaTime) {
-    if (!active || persistent) {
+    if (!active) {
         return;
     }
+    float explosionDuration = 0.3f; // Explosion lasts for 0.3 seconds
+    if (persistent) {
+        explosionDuration = 1.0f; // Explosion lasts for 1 second
+    }
     elapsedTime += deltaTime;
-    if (elapsedTime > 0.3f) { // Explosion lasts for 0.3 seconds
+    if (elapsedTime > explosionDuration) {
         active = false;
     }
 }
