@@ -48,8 +48,14 @@ Alien::Alien(Position position, SDL_Renderer* renderer, int type)
     }
 }
 
-void Alien::Update(int direction, float deltaTime) {
-    position.x += direction * 55 * deltaTime;
+void Alien::Update(int direction, float deltaTime, int numberOfAliens) {
+    float speedMultiplier = 1.0f;
+    if (numberOfAliens == 1) {
+        speedMultiplier = 4.0f;
+    } else if (numberOfAliens <= 10) {
+        speedMultiplier = 2.0f;
+    }
+    position.x += direction * 55 * speedMultiplier * deltaTime;
 }
 
 void Alien::Draw(SDL_Renderer* renderer) {

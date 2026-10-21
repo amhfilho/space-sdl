@@ -18,7 +18,7 @@ public:
 
     int GetPointValue();
 
-    void Update(int direction, float deltaTime);
+    void Update(int direction, float deltaTime, int numberOfAliens);
 
     Position position;
     float GetWidth() const { return textureWidth; }

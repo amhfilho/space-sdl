@@ -13,7 +13,7 @@ Game::Game()
     , alienDirection(1)
     , lastLaserShotTime(0)
     , explosionTime(0)
-    , alienLaserShotInterval(500)
+    , alienLaserShotInterval(800)
     , lastMisteryShipDeployTime(0)
     , misteryShipDeployInterval(Random::Int(10000, 20000)) // Deploy every 10 to 20 seconds
     , gameOver(false)
@@ -291,7 +291,7 @@ void Game::MoveAliens() {
     }
 
     for (auto& alien : aliens) {
-        alien.Update(alienDirection, deltaTime);
+        alien.Update(alienDirection, deltaTime, static_cast<int>(aliens.size()));
     }
 }
 
