@@ -360,7 +360,7 @@ void Game::CheckLaserCollision() {
 
         const SDL_FRect rect = misteryShip->GetRect();
         const SDL_FRect laserRect = shipLaser.GetRect();
-        if (SDL_HasRectIntersectionFloat(&laserRect, &rect)) {
+        if (misteryShip->alive == true && SDL_HasRectIntersectionFloat(&laserRect, &rect)) {
             explosions.emplace_back(misteryShip->position, renderer, false);
             shipLaser.active = false;
             misteryShip->alive = false;
