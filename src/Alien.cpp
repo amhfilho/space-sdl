@@ -60,3 +60,12 @@ void Alien::Draw(SDL_Renderer* renderer) {
     SDL_FRect alienRect = { position.x, position.y, textureWidth, textureHeight };
     SDL_RenderTexture(renderer, texture, nullptr, &alienRect);
 }
+
+int Alien::GetPointValue() {
+    switch (type) {
+        case 1: return 10;
+        case 2: return 20;
+        case 3: return 30;
+        default: return 10;
+    }
+}

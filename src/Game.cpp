@@ -4,6 +4,7 @@
 #include "MisteryShip.h"
 #include "Explosion.h"
 #include "Random.h"
+#include <string>
 
 Game::Game()
     : running(true)
@@ -18,6 +19,8 @@ Game::Game()
     , gameOver(false)
     , state(GameState::Playing)
     , lifes(3)
+    , score(0)
+    , highScore(0)
 {
 
     mTicksCount = SDL_GetTicks();
@@ -193,9 +196,9 @@ void Game::Draw() {
 
     float init = 10.0f;
     for (int i = 0; i < lifes; i++) {
-        float offsetX = ship->GetTextureWidth()*i + (10.0f*i) + init;
+        float offsetX = ship->GetTextureWidth()*i + (20.0f*i) + init;
         SDL_Texture *texture = ship->GetTexture();
-        SDL_FRect shipRect = { offsetX, 775.0f, ship->GetTextureWidth(), ship->GetTextureHeight() };
+        SDL_FRect shipRect = { offsetX, 760.0f, ship->GetTextureWidth(), ship->GetTextureHeight() };
         SDL_RenderTexture(renderer, texture, nullptr, &shipRect);
     }
     for (auto& alien : aliens) {
@@ -214,11 +217,8 @@ void Game::Draw() {
         explosion.Draw(renderer);
     }
 
-    SDL_RenderLine(renderer,
-        0 ,
-        Constants::Space::Height,
-        Constants::Window::Width,
-        Constants::Space::Height);
+    DrawScore();
+    DrawBorder();
 
     SDL_RenderPresent(renderer);
 }
@@ -257,7 +257,20 @@ void Game::CreateAllAliens() {
         for (int col = 0; col < 11; col++) {
             float x = col * 55 + offsetX;
             float y = row * 55 + offsetY;
-            int type = (row < 1) ? 1 : (row < 3) ? 2 : 3;
+            int type = 0;
+            switch (row) {
+                case 0:
+                    type = 3;
+                    break;
+                case 1:
+                case 2:
+                    type = 2;
+                    break;
+                case 3:
+                case 4:
+                    type = 1;
+                    break;
+            }
             aliens.emplace_back(Position{.x = x, .y = y}, renderer, type);
         }
     }
@@ -289,13 +302,14 @@ void Game::MoveAliensDown(int distance) {
 }
 
 void Game::Reset() {
-    // Return the ship to its starting position, clear transient state, and
-    // resume gameplay after the ship's explosion has been acknowledged.
     ship->SetInitialPosition();
     ship->GetLasers().clear();
     shipDirection = 0;
     alienLasers.clear();
     explosions.clear();
+    score = 0;
+    CreateAllAliens();
+    CreateAllObstacles();
     state = GameState::Playing;
 }
 
@@ -335,10 +349,24 @@ void Game::CheckLaserCollision() {
             if (SDL_HasRectIntersectionFloat(&laserRect, &alienRect)) {
                 // Collision detected: remove the alien and consume the laser.
                 explosions.emplace_back(it->position, renderer, false);
-
+                Alien& alien = *it;
+                AddScore(alien);
                 aliens.erase(it);
                 shipLaser.active = false;
+
                 break;
+            }
+        }
+
+        const SDL_FRect rect = misteryShip->GetRect();
+        const SDL_FRect laserRect = shipLaser.GetRect();
+        if (SDL_HasRectIntersectionFloat(&laserRect, &rect)) {
+            explosions.emplace_back(misteryShip->position, renderer, false);
+            shipLaser.active = false;
+            misteryShip->alive = false;
+            score += 50;
+            if (score > highScore) {
+                highScore = score;
             }
         }
     }
@@ -363,9 +391,6 @@ void Game::CheckLaserCollision() {
             explosions.emplace_back(explosionPosition, renderer, true); // persistent explosion
             state = GameState::ShipExploding;
             it->active = false;
-            if (lifes < 3) {
-                state = GameState::GameOver;
-            }
             break;
         }
     }
@@ -373,8 +398,70 @@ void Game::CheckLaserCollision() {
 
 void Game::WriteGameOver() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-
-    SDL_SetRenderScale(renderer, 2.0f, 2.0f);
-    SDL_RenderDebugText(renderer, 170, 80, "GAME OVER");
+    SDL_SetRenderScale(renderer, 3.0f, 3.0f);
+    const char* text = "GAME OVER";
+    const float scale = 3.0f;
+    float textWidth = SDL_strlen(text) * SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
+    float x = (Constants::Window::Width / scale - textWidth) / 2.0f;
+    SDL_RenderDebugText(renderer, x, 30, text);
     SDL_SetRenderScale(renderer, 1.0f, 1.0f);
+}
+
+void Game::DrawBorder() {
+    SDL_SetRenderDrawColor(renderer, 47, 230, 23, 255);
+    const float inset = 2.0f;
+    const float radius = 20.0f;
+    const float left = inset;
+    const float top = inset;
+    const float right = static_cast<float>(Constants::Window::Width) - inset - 1.0f;
+    const float bottom = static_cast<float>(Constants::Window::Height) - inset - 1.0f;
+
+    SDL_RenderLine(renderer, left + radius, top, right - radius, top);
+    SDL_RenderLine(renderer, left + radius, bottom, right - radius, bottom);
+    SDL_RenderLine(renderer, left, top + radius, left, bottom - radius);
+    SDL_RenderLine(renderer, right, top + radius, right, bottom - radius);
+    SDL_RenderLine(renderer, left, Constants::Space::Height, right, Constants::Space::Height);
+
+    // Quarter-circle arcs for each corner (centre cx, cy; quadrant signs sx, sy)
+    const struct { float cx, cy, sx, sy; } corners[] = {
+        { left + radius,  top + radius,    -1.0f, -1.0f },
+        { right - radius, top + radius,     1.0f, -1.0f },
+        { left + radius,  bottom - radius, -1.0f,  1.0f },
+        { right - radius, bottom - radius,  1.0f,  1.0f },
+    };
+    std::vector<SDL_FPoint> points;
+    const int steps = static_cast<int>(radius * 3);
+    for (const auto& c : corners) {
+        for (int i = 0; i <= steps; ++i) {
+            float angle = (SDL_PI_F / 2.0f) * i / steps;
+            points.push_back({ c.cx + c.sx * radius * SDL_cosf(angle),
+                               c.cy + c.sy * radius * SDL_sinf(angle) });
+        }
+    }
+    SDL_RenderPoints(renderer, points.data(), static_cast<int>(points.size()));
+}
+
+void Game::DrawScore() {
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    const float scale = 2.0f;
+    SDL_SetRenderScale(renderer, scale, scale);
+
+    const char* scoreLabel = "SCORE";
+    SDL_RenderDebugText(renderer, 10, 10, scoreLabel);
+    SDL_RenderDebugText(renderer, 10, 10 + SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE, std::to_string(score).c_str());
+
+    const char* highScoreLabel = "HIGH SCORE";
+    float textWidth = SDL_strlen(highScoreLabel) * SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
+    float x = Constants::Window::Width / scale - textWidth - 10.0f;
+    SDL_RenderDebugText(renderer, x, 10, highScoreLabel);
+    SDL_RenderDebugText(renderer, x, 10 + SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE, std::to_string(highScore).c_str());
+    SDL_SetRenderScale(renderer, 1.0f, 1.0f);
+}
+
+int Game::AddScore(Alien& alien) {
+    score += alien.GetPointValue();
+    if (score > highScore) {
+        highScore = score;
+    }
+    return score;
 }

@@ -19,13 +19,8 @@ public:
     ~Game();
 
     bool running;
-
     bool InitializeWindow();
-
     void HandleInput();
-
-
-
     void Update();
     void Draw();
 private:
@@ -44,13 +39,14 @@ private:
     bool gameOver;
     GameState state;
     int lifes;
+    int score;
+    int highScore;
 
     std::optional<Ship> ship;
     std::vector<Alien> aliens;
     std::vector<Obstacle> obstacles;
     std::vector<Laser> alienLasers;
     std::vector<Explosion> explosions;
-
     std::optional<MisteryShip> misteryShip;
 
     void CreateAllAliens();
@@ -62,4 +58,8 @@ private:
     void Reset();
     void CheckLaserCollision();
     void WriteGameOver();
+    void DrawScore();
+    void DrawBorder();
+
+    int AddScore(Alien &alien);
 };

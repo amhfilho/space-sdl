@@ -15,6 +15,9 @@ class Alien {
 public:
     Alien(Position position, SDL_Renderer* renderer, int type);
     void Draw(SDL_Renderer* renderer);
+
+    int GetPointValue();
+
     void Update(int direction, float deltaTime);
 
     Position position;

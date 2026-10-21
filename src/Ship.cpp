@@ -82,6 +82,9 @@ void Ship::MoveRight(float deltaTime) {
 }
 
 void Ship::FireLaser() {
+    if (!lasers.empty()) {
+        return;
+    }
     Laser laser;
     laser.position.x = position.x + Constants::Ship::BaseWidth / 2.0f - Constants::Laser::Width / 2.0f;
     laser.position.y = position.y - Constants::Laser::Height;

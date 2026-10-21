@@ -52,8 +52,12 @@ void MisteryShip::Draw(SDL_Renderer* renderer) {
         return;
     }
 
-    SDL_FRect shipRect = { position.x, position.y, textureWidth, textureHeight };
+    SDL_FRect shipRect = GetRect();
     SDL_RenderTexture(renderer, texture.get(), nullptr, &shipRect);
+}
+
+SDL_FRect MisteryShip::GetRect() const {
+    return { position.x, position.y, textureWidth, textureHeight };
 }
 
 MisteryShip::~MisteryShip() {

@@ -6,8 +6,12 @@
 
 class MisteryShip {
 public:
+    Position position{};
+    bool alive;
     MisteryShip(SDL_Renderer* renderer);
     void Draw(SDL_Renderer* renderer);
+
+    SDL_FRect GetRect() const;
 
     ~MisteryShip();
 
@@ -17,7 +21,7 @@ private:
     std::unique_ptr<SDL_Texture, TextureDeleter> texture;
     float textureWidth;
     float textureHeight;
-    Position position{};
+
     float speed;
-    bool alive;
+
 };
