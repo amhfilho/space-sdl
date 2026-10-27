@@ -18,7 +18,7 @@ Game::Game()
     , lastMisteryShipDeployTime(0)
     , misteryShipDeployInterval(Random::Int(10000, 20000)) // Deploy every 10 to 20 seconds
     , gameOver(false)
-    , state(GameState::Playing)
+    , state(GameState::StartScreen)
     , lifes(3)
     , score(0)
     , highScore(0)
@@ -63,6 +63,11 @@ bool Game::InitializeWindow() {
     if (mixer) {
         explosionSound = MIX_LoadAudio(mixer, AssetLoader::GetAssetPath("Sounds/explosion.ogg").c_str(), true);
         laserSound = MIX_LoadAudio(mixer, AssetLoader::GetAssetPath("Sounds/laser.ogg").c_str(), true);
+        musicAudio = MIX_LoadAudio(mixer, AssetLoader::GetAssetPath("Sounds/music.ogg").c_str(), false);
+        musicTrack = MIX_CreateTrack(mixer);
+        if (musicTrack && musicAudio) {
+            MIX_SetTrackAudio(musicTrack, musicAudio);
+        }
     } else {
         SDL_Log("Audio unavailable: %s", SDL_GetError());
     }
@@ -87,6 +92,16 @@ void Game::HandleInput() {
                         running = false;
                         break;
                 }
+                if (state == GameState::StartScreen) {
+                    if (event.key.key == SDLK_SPACE) {
+                        state = GameState::Playing;
+                        // Restart the clocks so time spent on the start screen isn't counted as gameplay.
+                        mTicksCount = SDL_GetTicks();
+                        lastLaserShotTime = mTicksCount;
+                        lastMisteryShipDeployTime = mTicksCount;
+                    }
+                    break;
+                }
                 if (state == GameState::GameOver) {
                     Reset();
                 }
@@ -100,7 +115,7 @@ void Game::HandleInput() {
                 break;
         }
 
-        if (state == GameState::GameOver) {
+        if (state == GameState::GameOver || state == GameState::StartScreen) {
             shipDirection = 0;
             continue;
         }
@@ -119,6 +134,11 @@ void Game::HandleInput() {
 }
 
 void Game::Update() {
+    UpdateMusic();
+    if (state == GameState::StartScreen) {
+        mTicksCount = SDL_GetTicks();
+        return;
+    }
     Uint64 currentTicks = SDL_GetTicks();
     deltaTime = (currentTicks - mTicksCount) / 1000.0f;
     mTicksCount = currentTicks;
@@ -204,8 +224,10 @@ void Game::Draw() {
     if (state == GameState::GameOver) {
         WriteGameOver();
     }
-
-    if (state == GameState::Playing) {
+    else if (state == GameState::StartScreen) {
+        WriteStartScreen();
+    }
+    else if (state == GameState::Playing) {
         ship->Draw(renderer);
     }
 
@@ -244,6 +266,8 @@ Game::~Game() {
     Ship::ClearTexture();
     misteryShip.reset();
     explosions.clear();
+    if (musicTrack) MIX_DestroyTrack(musicTrack);
+    if (musicAudio) MIX_DestroyAudio(musicAudio);
     if (laserSound) MIX_DestroyAudio(laserSound);
     if (explosionSound) MIX_DestroyAudio(explosionSound);
     if (mixer) MIX_DestroyMixer(mixer);
@@ -256,6 +280,22 @@ Game::~Game() {
 void Game::PlaySound(MIX_Audio* sound) {
     if (mixer && sound) {
         MIX_PlayAudio(mixer, sound);
+    }
+}
+
+void Game::UpdateMusic() {
+    if (!musicTrack || !musicAudio) {
+        return;
+    }
+    const bool shouldPlay = state == GameState::StartScreen || state == GameState::GameOver;
+    const bool playing = MIX_TrackPlaying(musicTrack);
+    if (shouldPlay && !playing) {
+        SDL_PropertiesID options = SDL_CreateProperties();
+        SDL_SetNumberProperty(options, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+        MIX_PlayTrack(musicTrack, options);
+        SDL_DestroyProperties(options);
+    } else if (!shouldPlay && playing) {
+        MIX_StopTrack(musicTrack, 0);
     }
 }
 
@@ -335,7 +375,7 @@ void Game::Reset() {
     score = 0;
     CreateAllAliens();
     CreateAllObstacles();
-    state = GameState::Playing;
+    state = GameState::StartScreen;
 }
 
 void Game::ShootAlienLasers() {
@@ -470,6 +510,8 @@ void Game::DrawBorder() {
 }
 
 void Game::DrawScore() {
+    if (state == GameState::StartScreen)
+        return;
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     const float scale = 2.0f;
     SDL_SetRenderScale(renderer, scale, scale);
@@ -492,4 +534,23 @@ int Game::AddScore(Alien& alien) {
         highScore = score;
     }
     return score;
+}
+
+void Game::WriteStartScreen() {
+    SDL_SetRenderDrawColor(renderer, 47, 230, 23, 255);
+    SDL_SetRenderScale(renderer, 3.0f, 3.0f);
+    const char* text = "SDL3 Space Invaders";
+    const float scale = 3.0f;
+    float textWidth = SDL_strlen(text) * SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
+    float x = (Constants::Window::Width / scale - textWidth) / 2.0f;
+    SDL_RenderDebugText(renderer, x, 10, text);
+
+    SDL_SetRenderScale(renderer, 2.0f, 2.0f);
+    const char* text2 = "Press SPACE to start";
+    const float scale2 = 2.0f;
+    float textWidth2 = SDL_strlen(text2) * SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
+    float x2 = (Constants::Window::Width / scale2 - textWidth2) / 2.0f;
+    SDL_RenderDebugText(renderer, x2, 30, text2);
+
+    SDL_SetRenderScale(renderer, 1.0f, 1.0f);
 }

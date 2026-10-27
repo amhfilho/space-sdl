@@ -13,7 +13,7 @@
 class Game {
 public:
     enum class GameState {
-        Playing, ShipExploding, DelayAfterExploding, GameOver
+        StartScreen,Playing, ShipExploding, DelayAfterExploding, GameOver
     };
 
     Game();
@@ -23,6 +23,8 @@ public:
     bool InitializeWindow();
     void HandleInput();
     void Update();
+
+
     void Draw();
 private:
     SDL_Window* window;
@@ -30,6 +32,8 @@ private:
     MIX_Mixer* mixer = nullptr;
     MIX_Audio* explosionSound = nullptr;
     MIX_Audio* laserSound = nullptr;
+    MIX_Audio* musicAudio = nullptr;
+    MIX_Track* musicTrack = nullptr;
 
     Uint64 mTicksCount;
     float deltaTime;
@@ -61,10 +65,12 @@ private:
     void DeleteInactiveAlienLasers();
     void Reset();
     void PlaySound(MIX_Audio* sound);
+    void UpdateMusic();
     void CheckLaserCollision();
     void WriteGameOver();
     void DrawScore();
     void DrawBorder();
+    void WriteStartScreen();
 
     int AddScore(Alien &alien);
 };
