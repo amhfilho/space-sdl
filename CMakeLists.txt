@@ -14,6 +14,7 @@ set(CMAKE_FIND_FRAMEWORK NEVER)
 
 find_package(SDL3 REQUIRED CONFIG)
 find_package(SDL3_image REQUIRED CONFIG)
+find_package(SDL3_mixer REQUIRED CONFIG)
 
 include_directories(include)
 
@@ -48,9 +49,12 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PRIVATE
         SDL3::SDL3
         SDL3_image::SDL3_image
+        SDL3_mixer::SDL3_mixer
 )
 # Copy game assets next to the executable so they are found via SDL_GetBasePath()
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
                 ${CMAKE_SOURCE_DIR}/Graphics $<TARGET_FILE_DIR:${PROJECT_NAME}>/Graphics
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_SOURCE_DIR}/Sounds $<TARGET_FILE_DIR:${PROJECT_NAME}>/Sounds
 )

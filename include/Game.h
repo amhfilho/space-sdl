@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
 #include <optional>
 #include <vector>
 
@@ -26,6 +27,9 @@ public:
 private:
     SDL_Window* window;
     SDL_Renderer* renderer;
+    MIX_Mixer* mixer = nullptr;
+    MIX_Audio* explosionSound = nullptr;
+    MIX_Audio* laserSound = nullptr;
 
     Uint64 mTicksCount;
     float deltaTime;
@@ -56,6 +60,7 @@ private:
     void ShootAlienLasers();
     void DeleteInactiveAlienLasers();
     void Reset();
+    void PlaySound(MIX_Audio* sound);
     void CheckLaserCollision();
     void WriteGameOver();
     void DrawScore();

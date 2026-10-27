@@ -4,6 +4,7 @@
 #include "MisteryShip.h"
 #include "Explosion.h"
 #include "Random.h"
+#include "AssetLoader.h"
 #include <string>
 
 Game::Game()
@@ -56,6 +57,16 @@ bool Game::InitializeWindow() {
         return false;
     }
 
+    if (MIX_Init()) {
+        mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
+    }
+    if (mixer) {
+        explosionSound = MIX_LoadAudio(mixer, AssetLoader::GetAssetPath("Sounds/explosion.ogg").c_str(), true);
+        laserSound = MIX_LoadAudio(mixer, AssetLoader::GetAssetPath("Sounds/laser.ogg").c_str(), true);
+    } else {
+        SDL_Log("Audio unavailable: %s", SDL_GetError());
+    }
+
     ship.emplace(renderer);
     CreateAllAliens();
     misteryShip.emplace(renderer);
@@ -80,7 +91,11 @@ void Game::HandleInput() {
                     Reset();
                 }
                 else if (event.key.key == SDLK_SPACE && !event.key.repeat) {
+                    const bool hadLaser = !ship->GetLasers().empty();
                     ship->FireLaser();
+                    if (!hadLaser && !ship->GetLasers().empty()) {
+                        PlaySound(laserSound);
+                    }
                 }
                 break;
         }
@@ -229,9 +244,19 @@ Game::~Game() {
     Ship::ClearTexture();
     misteryShip.reset();
     explosions.clear();
+    if (laserSound) MIX_DestroyAudio(laserSound);
+    if (explosionSound) MIX_DestroyAudio(explosionSound);
+    if (mixer) MIX_DestroyMixer(mixer);
+    MIX_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+void Game::PlaySound(MIX_Audio* sound) {
+    if (mixer && sound) {
+        MIX_PlayAudio(mixer, sound);
+    }
 }
 
 void Game::CreateAllObstacles() {
@@ -349,6 +374,7 @@ void Game::CheckLaserCollision() {
             if (SDL_HasRectIntersectionFloat(&laserRect, &alienRect)) {
                 // Collision detected: remove the alien and consume the laser.
                 explosions.emplace_back(it->position, renderer, false);
+                PlaySound(explosionSound);
                 Alien& alien = *it;
                 AddScore(alien);
                 aliens.erase(it);
@@ -362,6 +388,7 @@ void Game::CheckLaserCollision() {
         const SDL_FRect laserRect = shipLaser.GetRect();
         if (misteryShip->alive == true && SDL_HasRectIntersectionFloat(&laserRect, &rect)) {
             explosions.emplace_back(misteryShip->position, renderer, false);
+            PlaySound(explosionSound);
             shipLaser.active = false;
             misteryShip->alive = false;
             score += 50;
@@ -389,6 +416,7 @@ void Game::CheckLaserCollision() {
             float explosionY = ship->GetRect().y;
             Position explosionPosition = { explosionX, explosionY };
             explosions.emplace_back(explosionPosition, renderer, true); // persistent explosion
+            PlaySound(explosionSound);
             state = GameState::ShipExploding;
             it->active = false;
             break;
