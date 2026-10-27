@@ -1,6 +1,8 @@
 # SDL3 Space Invaders
 
-A Space Invaders clone written in C++20 with SDL3.
+A Space Invaders clone written in C++20 with [Simple DirectMedia Layer - SDL3](https://www.libsdl.org/). This project was inspired by the video
+[C++ Space Invaders Tutorial with raylib - Beginner Tutorial (OOP)](https://www.youtube.com/watch?v=TGo3Oxdpr5o&t=5s) 
+which uses [raylib](https://www.raylib.com/) instead of SDL3.
 
 ## Requirements
 
@@ -20,7 +22,10 @@ A Space Invaders clone written in C++20 with SDL3.
 brew install cmake sdl3 sdl3_image sdl3_mixer
 ```
 
-The build looks for the libraries in `/opt/homebrew` and `/usr/local`.
+The build looks for the libraries in `/opt/homebrew` and `/usr/local`. Refer to 
+the [SDL Github page](https://github.com/libsdl-org/SDL/blob/main/INSTALL.md) for instructions on how to install on other 
+platforms. The complete documentation can be found 
+in [SDL Wiki](https://wiki.libsdl.org/SDL3/FrontPage).
 
 ## Build and run
 
